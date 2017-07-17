@@ -28,15 +28,10 @@ RUN tar xvf python.tar.gz && \
     patch -p1 < /Setup.patch && \
     make all && make install && rm -rf ../Python-3.6.1
 
-RUN echo "[*] Creating certificate" && openssl req -new -out cert.req -subj '/CN=*.goodbank.com' -days 2048 -passout pass:foobar && \
-    echo "[*] Decrypting privatekey" && openssl rsa -in privkey.pem -out privkey2.pem -passin pass:foobar && \
-    mv privkey2.pem privkey.pem && \
-    echo "[*] Signing cert" && openssl x509 -req -in cert.req -out cert.pem -signkey privkey.pem
+RUN pip3 install requests
 
 RUN mkdir /shared
 
-COPY start_socats.py /start_socats.py
-
 VOLUME /shared
 
-ENTRYPOINT ["python3", "/start_socats.py"]
+ENTRYPOINT ["bash"]

@@ -1,3 +1,4 @@
-scapy-python3
-aiohttp
-aiohttp_jinja2
+helperlib==0.3.0
+requests==2.18.1
+scapy-python3==0.21
+scapy-ssl-tls==1.3.0
