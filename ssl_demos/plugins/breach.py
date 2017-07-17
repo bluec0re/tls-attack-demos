@@ -4,6 +4,8 @@ from functools import reduce
 import struct
 import time
 import logging
+import sys
+from ssl_demos.common import get_terminal_size
 
 SECRET = '0372e249-7932-41ba-8dbb-6e79e991c8e7'
 TOKEN = '7b38918f6fcd5b2f1245fece252034b1d61bbf67452952dd47c8ac296a3c1b72'
@@ -49,13 +51,8 @@ class BreachPlugin:
 
         conn = self.sniffer.closed_connections.get()
         log.debug('Got connection %r', conn)
-        if conn.tls_recvd > minsize:
-            color = 91
-        elif conn.tls_recvd < minsize:
-            color = 92
-        else:
-            color = 93
-        print("Bytes for {}: \033[{}m{}\033[0m".format(c, color, conn.tls_recvd))
+        self.print_char(c, conn.tls_recvd, minsize)
+        self.print_state(base, c)
         return conn.tls_recvd
 
     def test(self):
@@ -97,13 +94,13 @@ class BreachPlugin:
                     back += best_results
                     back.sort(key=lambda x: (len(x[0]), x[1]))
                     self.print_backlog(minsize, back, base)
-                    self.print_state(base)
+                    self.print_state(base, best_results[0][0] if best_results else '')
             while True:
                 best_results = []
                 for c, val in all_results.items():
                     if val == best[0] and len(c) == len(best[1]):
                         best_results.append(c)
-                print('Results:', best_results)
+                self.print_current_results(best_results)
                 if len(best_results) <= 1:
                     break
                 log.warning('To many results. Retry with 2nd best')
@@ -114,7 +111,10 @@ class BreachPlugin:
                         best = val, c
 
             base += best[1]
-            self.print_state(base)
+            self.print_state(base, '')
+
+    def print_current_results(self, results):
+        self._update_line('Results: {}'.format(results))
 
     def print_backlog(self, minsize, back, base):
         back = ', '.join(
@@ -124,14 +124,27 @@ class BreachPlugin:
                 score)
             for val, score in back
         )
-        print('Retesting with \033[94m{}\033[0m: [{}]'.format(minsize, back))
+        self._update_line('Retesting with \033[94m{}\033[0m: [{}]'.format(minsize, back))
 
-    def print_state(self, base):
+    def print_state(self, base, guess):
         correct = ''
-        for guess, ref in zip(base, self.core.target):
-            if guess == ref:
-                correct += guess
+        for char, ref in zip(base, self.core.target):
+            if char == ref:
+                correct += char
             else:
                 break
-        print("Current: \033[92m{}\033[91m{}\033[0m Target: \033[93m{}\033[0m".format(correct, base[len(correct):], self.core.target))
+        sys.stdout.write("\nCurrent: \033[92m{}\033[91m{}\033[95m{}\033[0m Target: \033[93m{}\033[0m".format(correct, base[len(correct):], guess, self.core.target))
 
+    def print_char(self, c, size, minsize):
+        if size > minsize:
+            color = 91
+        elif size < minsize:
+            color = 92
+        else:
+            color = 93
+        text = "Bytes for {}: \033[{}m{}\033[0m".format(c, color, size)
+        self._update_line(text)
+
+    def _update_line(self, text):
+        align = ("\r{: <" + str(get_terminal_size()[0]) + "}").format
+        sys.stdout.write(align(text))
