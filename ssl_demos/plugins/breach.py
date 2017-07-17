@@ -28,18 +28,7 @@ class BreachPlugin:
 
     def test_char(self, c, base, minsize):
         log.debug('Testing %s', c)
-        # self.total = 0
-        # resp = requests.get('https://127.0.0.1:8443', params={
-        #     'test': base + c
-        #     }, cookies={
-        #         'sessionid': SECRET
-        #     }, verify=False)
-        # resp = requests.get('https://127.0.0.1:2000', params={
-        #     'affiliate': 
-        #     }, cookies={
-        #         'SESSION': SECRET
-        #     }, verify=False)
-        
+                
         if not self.sniffer.closed_connections.empty():
             log.error('Closed connections not empty: %r', self.sniffer.closed_connections.get())
         value = self.core.prefix + base + c
@@ -133,7 +122,7 @@ class BreachPlugin:
                 correct += char
             else:
                 break
-        sys.stdout.write("\nCurrent: \033[92m{}\033[91m{}\033[95m{}\033[0m Target: \033[93m{}\033[0m".format(correct, base[len(correct):], guess, self.core.target))
+        sys.stdout.write(self._color("\nCurrent: \033[92m{}\033[91m{}\033[95m{}\033[0m Target: \033[93m{}\033[0m".format(correct, base[len(correct):], guess, self.core.target)))
 
     def print_char(self, c, size, minsize):
         if size > minsize:
@@ -145,6 +134,11 @@ class BreachPlugin:
         text = "Bytes for {}: \033[{}m{}\033[0m".format(c, color, size)
         self._update_line(text)
 
+    def _color(self, text):
+        if self.core.args.bright:
+            text = text.replace('[9', '[3')
+        return text
+
     def _update_line(self, text):
         align = ("\r{: <" + str(get_terminal_size()[0]) + "}").format
-        sys.stdout.write(align(text))
+        sys.stdout.write(align(self._color(text)))
