@@ -1,4 +1,5 @@
-helperlib==0.3.0
+helperlib==0.4.0
 requests==2.18.1
 scapy-python3==0.21
-scapy-ssl-tls==1.3.0
+six==1.10.0
+git+https://github.com/bluec0re/scapy-ssl_tls.git@py3compat#egg=scapy-ssl_tls
