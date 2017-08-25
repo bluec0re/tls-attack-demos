@@ -14,7 +14,7 @@ def handler(request):
     if sessionid is None:
         sessionid = str(uuid.uuid4())
 
-    csrf_token = hashlib.sha256((sessionid + SECRET).encode()).hexdigest()
+    csrf_token = hashlib.sha1((sessionid + SECRET).encode()).hexdigest()
     print(csrf_token)
 
     headers = {

@@ -57,7 +57,7 @@ class BreachPlugin:
             best = (9999, None)
             all_results = { c: 99999 for c in charset }
             back = [('', 9999)]
-            while len(back) > 0:
+            while back:
                 b, refsize = back.pop(0)
                 results = { c: 99999 for c in charset }
                 for c in charset:
@@ -68,7 +68,7 @@ class BreachPlugin:
                         if best[0] > size or best[0] == size and len(best[1]) < len(b+c):
                             best = size, b+c
                 resminsize = min(results.values())
-                if refsize < resminsize and len(back) > 0 and min(map(lambda x: x[1], back)) >= resminsize:
+                if refsize < resminsize and back and min(map(lambda x: x[1], back)) >= resminsize:
                     log.warning('Previous size of %s is lower than current size and no other available: %d < %d. Accept and restart', b, refsize, resminsize)
                     break
                 else:

@@ -161,6 +161,7 @@ class Sniffer(threading.Thread):
         log.debug('Got packet')
         if TCP in packet:
             conn, closed = self.get_connection(packet)
+            log.debug('Connection: %r', conn)
             ip_packet = packet[IP]
             tcp_packet = packet[TCP]
 

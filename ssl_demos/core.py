@@ -130,6 +130,7 @@ def main(argv=None):
     parser.add_argument('-p', '--port', type=int)
     parser.add_argument('-i', '--ip')
     parser.add_argument('-I', '--intf', default='lo')
+    parser.add_argument('-I2', '--intf2', default='lo')
     parser.add_argument('-m', '--method', default='GET')
     parser.add_argument('-H', '--header', action='append')
     parser.add_argument('-d', '--data')
