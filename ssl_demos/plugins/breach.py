@@ -23,6 +23,14 @@ class BreachPlugin:
         self.core = core
         self.sniffer = sniffer
 
+    @classmethod
+    def add_arguments(cls, parser):
+        parser.add_argument('-c', '--charset', default='0123456789abcdef', help='Charset to use for guessing the secret')
+        parser.add_argument(
+            '-t', '--target', help='Target secret to recover (for visual demo only)')
+        parser.add_argument('-P', '--prefix', help='Prefix to use for guessing the secret')
+        parser.add_argument('-s', '--start', default='', help='Already discovered secret')
+
     def start(self):
         self.test()
 
@@ -122,7 +130,7 @@ class BreachPlugin:
                 correct += char
             else:
                 break
-        sys.stdout.write(self._color("\nCurrent: \033[92m{}\033[91m{}\033[95m{}\033[0m Target: \033[93m{}\033[0m".format(correct, base[len(correct):], guess, self.core.target)))
+        sys.stdout.write(self.core._color("\nCurrent: \033[92m{}\033[91m{}\033[95m{}\033[0m Target: \033[93m{}\033[0m".format(correct, base[len(correct):], guess, self.core.target)))
 
     def print_char(self, c, size, minsize):
         if size > minsize:
@@ -134,11 +142,6 @@ class BreachPlugin:
         text = "Bytes for {}: \033[{}m{}\033[0m".format(c, color, size)
         self._update_line(text)
 
-    def _color(self, text):
-        if self.core.args.bright:
-            text = text.replace('[9', '[3')
-        return text
-
     def _update_line(self, text):
         align = ("\r{: <" + str(get_terminal_size()[0]) + "}").format
-        sys.stdout.write(align(self._color(text)))
+        sys.stdout.write(align(self.core._color(text)))

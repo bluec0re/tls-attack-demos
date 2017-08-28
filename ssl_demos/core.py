@@ -120,28 +120,33 @@ class Demos:
         log.debug('Requesting %s %s', method, url)
         requests.request(method, url, data=data, headers=headers, verify=False, cookies=cookies)
 
+    def _color(self, text):
+        if self.bright:
+            text = text.replace('[9', '[3')
+        return text
 
 def main(argv=None):
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-l', '--loglevel', choices=(
         'DEBUG', 'INFO', 'WARN', 'ERROR'
-    ), default='INFO')
-    parser.add_argument('PLUGIN', choices=Demos.available_plugins.keys())
-    parser.add_argument('-p', '--port', type=int)
-    parser.add_argument('-i', '--ip')
-    parser.add_argument('-I', '--intf', default='lo')
-    parser.add_argument('-I2', '--intf2', default='lo')
-    parser.add_argument('-m', '--method', default='GET')
-    parser.add_argument('-H', '--header', action='append')
-    parser.add_argument('-d', '--data')
-    parser.add_argument('-u', '--url')
-    parser.add_argument('-c', '--charset', default='0123456789abcdef')
-    parser.add_argument('-t', '--target')
-    parser.add_argument('-P', '--prefix')
-    parser.add_argument('-b', '--cookies')
-    parser.add_argument('-s', '--start', default='')
-    parser.add_argument('--bright', action='store_true')
+    ), default='INFO', help='Show only messages of at least this level')
+    parser.add_argument('--bright', action='store_true', help='Use colors corresponding to a bright background (if available)')
+    parser.add_argument('-p', '--port', type=int, help='Server port')
+    parser.add_argument('-i', '--ip', help='Server IP')
+    parser.add_argument('-I', '--intf', default='lo', help='Interface to sniff/intercept')
+    parser.add_argument('-m', '--method', default='GET', help='HTTP Method to use')
+    parser.add_argument('-H', '--header', action='append', help='Additional HTTP-Headers')
+    parser.add_argument('-d', '--data', help='HTTP POST data')
+    parser.add_argument('-u', '--url', help='URL to send requests to (victim)')
+    parser.add_argument('-b', '--cookies', help='Cookies to be send by the victim')
 
+    subparsers = parser.add_subparsers(title='Plugins', dest="PLUGIN")
+    subparsers.required = True
+    for name, plugin in Demos.available_plugins.items():
+        plugin_parser = subparsers.add_parser(name,
+                                              formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        plugin.add_arguments(plugin_parser)
 
     args = parser.parse_args(argv)
     
