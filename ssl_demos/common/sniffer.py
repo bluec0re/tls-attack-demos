@@ -45,10 +45,10 @@ class Sniffer(threading.Thread):
         sniff(
             iface=self.interface,
             prn=self.process,
-            filter='ip host {} and tcp port {}'.format(
-                self.target_ip,
-                self.target_port
-            ),
+            #filter='ip host {} and tcp port {}'.format(
+            #    self.target_ip,
+            #    self.target_port
+            #),
             stop_filter=lambda p: self.stop_event.is_set()
         )
 
