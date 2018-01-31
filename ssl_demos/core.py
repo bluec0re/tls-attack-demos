@@ -23,9 +23,9 @@ log = logging.getLogger(__name__)
 def _collect_plugins():
     from . import plugins
     _plugins = {}
-    
-    for modinfo in pkgutil.iter_modules(plugins.__path__):
-        mod = modinfo.module_finder.find_module(modinfo.name).load_module(modinfo.name)
+
+    for module_finder, name, _ in pkgutil.iter_modules(plugins.__path__):
+        mod = module_finder.find_module(name).load_module(name)
         for name, clazz in inspect.getmembers(mod, inspect.isclass):
             if not name.endswith('Plugin'):
                 continue
@@ -56,7 +56,7 @@ class Demos:
         else:
             sniffer = None
             p = plugin(core=self)
-        
+
         try:
             p.start()
         except KeyboardInterrupt:
@@ -71,7 +71,7 @@ class Demos:
 
         if isinstance(data, dict):
             data = urlencode(data)
-        
+
         if query is not None:
             if isinstance(query, dict):
                 query = list(query.items())
@@ -88,8 +88,8 @@ class Demos:
                 else:
                     data += '&' + urlencode(parameters)
 
-        
-        if placeholders is not None:            
+
+        if placeholders is not None:
             p2 = {}
             for name, value in placeholders.items():
                 name = '{{{}}}'.format(name)
@@ -98,20 +98,20 @@ class Demos:
                 if data is not None:
                     data = data.replace(name, value)
 
-            q2 = []    
+            q2 = []
             for k, v in origquery:
                 if v in p2:
                     q2.append((k, p2[v]))
                 else:
                     q2.append((k, v))
             origquery = q2
-                
+
         query = urlencode(origquery)
         res = ParseResult(*(url[:4] + (query,) + url[5:]))
         url = urlunparse(res)
 
         self.request(self.method, url, data=data)
-    
+
     def request(self, method, url, data=None, headers=None):
         if self.cookies:
             cookies = dict(parse_qsl(self.cookies))
@@ -149,7 +149,7 @@ def main(argv=None):
         plugin.add_arguments(plugin_parser)
 
     args = parser.parse_args(argv)
-    
+
     default_config(level=args.loglevel)
 
     demos = Demos(args)

@@ -41,14 +41,15 @@ class Sniffer(threading.Thread):
         self.connections_sem = threading.Semaphore()
 
     def run(self):
-        log.info('Starting sniffer for %s:%d on %s', self.target_ip, self.target_port, self.interface)
+        filter = 'ip host {} and tcp port {}'.format(
+            self.target_ip,
+            self.target_port
+        )
+        log.info('Starting sniffer for %s:%d on %s (%s)', self.target_ip, self.target_port, self.interface, filter)
         sniff(
             iface=self.interface,
             prn=self.process,
-            #filter='ip host {} and tcp port {}'.format(
-            #    self.target_ip,
-            #    self.target_port
-            #),
+            filter=filter,
             stop_filter=lambda p: self.stop_event.is_set()
         )
 
@@ -62,7 +63,7 @@ class Sniffer(threading.Thread):
     def get_conn(self, key):
         with self.connections_sem:
             return self.connections[key]
-    
+
     def add_conn(self, key, conn):
         with self.connections_sem:
             self.connections[key] = conn
@@ -176,7 +177,7 @@ class Sniffer(threading.Thread):
             else:
                 appdata = None
 
-            
+
             if ip_packet.src == conn.source[0] and tcp_packet.sport == conn.source[1]: # request
                 conn.sent += length
                 if appdata is not None:
