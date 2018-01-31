@@ -1,4 +1,4 @@
-helperlib==0.4.0
+helperlib==0.5.1
 requests==2.18.1
 scapy-python3==0.21
 six==1.10.0
